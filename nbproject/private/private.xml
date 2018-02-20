@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <data xmlns="http://www.netbeans.org/ns/make-project-private/1">
+        <activeConfTypeElem>1</activeConfTypeElem>
+        <activeConfIndexElem>1</activeConfIndexElem>
+    </data>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="1">
+        <file>
+            <url>mvtwaproduct.cpp</url>
+            <bookmark id="1">
+                <name/>
+                <line>713</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/Users/mhekmatnejad/Projects/mvlModelCheker/main.cpp</file>
+            <file>file:/Users/mhekmatnejad/Projects/mvlModelCheker/KripkeModel.cpp</file>
+            <file>file:/Users/mhekmatnejad/Projects/mvlModelCheker/mvtwaproduct.cpp</file>
+            <file>file:/Users/mhekmatnejad/Projects/mvlModelCheker/sirle2018/road_network_model.dot</file>
+            <file>file:/Users/mhekmatnejad/Projects/mvlModelCheker/KripkeModel.h</file>
+        </group>
+    </open-files>
+</project-private>
