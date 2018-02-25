@@ -440,9 +440,15 @@ mv_interval* mv_interval::psi_mv(mv_interval* base, mv_interval* given){
                     map_itv[f[n].ap_name().substr(0, f[n].ap_name().find('='))] = itv;
                 } else{
                     //itv = shared_intervals_->parse_string_to_interval(f[n].ap_name());
+                    //*** important *** only intervals with the same upper bound or lower bound can be joint 
+                    //as logical AND without considering the Psi satisfaction evaluator function
+                    mvspot::mv_interval* tmpItv = map_itv[f[n].ap_name().substr(0, f[n].ap_name().find('='))];
+                    if((tmpItv->getTop()->getValue() == itv->getTop()->getValue() == 1.0) ||
+                       (tmpItv->getButtom()->getValue() == itv->getButtom()->getValue() == 0)  ){
                     //the same interval symbols in a conjunctive format must be joint
                     itv = itv->join_mv(map_itv[f[n].ap_name().substr(0, f[n].ap_name().find('='))], itv);
                     map_itv[f[n].ap_name().substr(0, f[n].ap_name().find('='))] = itv;
+                    }
                 }
             }else{
                 v.emplace_back(f[n]);

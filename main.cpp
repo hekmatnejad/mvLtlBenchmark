@@ -45,15 +45,20 @@ float CERTAINTY_THREASHOLD = 1;
 void model_4(string formula);
 void dfs_twa_graph(spot::const_twa_graph_ptr aut, bdd query);
 void dfs_twa(spot::const_twa_ptr aut);
-//int get_random(int low, int high);
+//void dfs_twa(spot::twa* aut);
+spot::twa* my_twa;
+int get_random(int low, int high);
 static spot::parsed_aut_ptr read_model_aut;
 static spot::kripke_graph_ptr kg_model;
 static spot::twa_graph_ptr aut_model;
 
 std::map<int, geo_pos*>* geo_locations;  
-int MAX_GEO_X;
-int MAX_GEO_Y;
+std::map<int, int>* rand_intervals;
+string benchmark_name = "benchmark/benchmark_model_";
+int MAX_GEO_X = 4;
+int MAX_GEO_Y = 4;
 float MAX_GEO_DIST;
+int MAX_INTERVAL_NUM = 6;
 void test();
 
 ///spot::twa_graph_ptr shared_formula_graph;
@@ -67,49 +72,71 @@ int main(int argc, char** argv) {
     cout << mvspot::getVersion() << "\n" << mvspot::getBuild() << "\n";
 
     mvspot::test_intervals();
-    test();
-    ifstream inFile;
-    //string model_filename = "sirle2018/road_network_model_test.dot";
-    string model_filename = "benchmark/road_network_model.dot";
+    benchmark_name += std::to_string(MAX_GEO_X)+"_"+std::to_string(MAX_GEO_Y);
+    string model_filename = benchmark_name+".hoa";
     srand(time(NULL));
     read_model_aut = Util::readAutFromFile(model_filename, false, shared_dict);
     if (!read_model_aut || read_model_aut->errors.size() > 0) {
-        cout << "could not read the model from file!";
+        cout << "could not read the model from file!"<<model_filename<<endl;
         exit(0);
     } else {
         cout << "model loaded from: " << model_filename << endl;
-        Util::write2File("benchmark/road_network_graph.dot", read_model_aut->aut, "k");
+        Util::write2File(benchmark_name+"_graph.dot", read_model_aut->aut, "k");
 
     }
     kg_model = read_model_aut->ks;
     aut_model = read_model_aut->aut;
-    MAX_GEO_X = 4;
-    MAX_GEO_Y = 5;
+    
     MAX_GEO_DIST = std::sqrt(MAX_GEO_X*MAX_GEO_X + MAX_GEO_Y*MAX_GEO_Y);
     std::cout << "MAX_GEO_DIST: " << MAX_GEO_DIST  << endl;
     geo_locations = new std::map<int, geo_pos*>();
-    (*geo_locations)[0] = new geo_pos(0,5);
-    (*geo_locations)[1] = new geo_pos(1,5);
-    (*geo_locations)[2] = new geo_pos(2,5);
-    (*geo_locations)[3] = new geo_pos(3,5);
-    (*geo_locations)[4] = new geo_pos(4,5);
-    (*geo_locations)[5] = new geo_pos(2,4);
-    (*geo_locations)[6] = new geo_pos(2,3);
-    (*geo_locations)[7] = new geo_pos(2,2);
-    (*geo_locations)[8] = new geo_pos(2,1);
-    (*geo_locations)[9] = new geo_pos(2,0);
-    (*geo_locations)[10] = new geo_pos(3,1);
-    (*geo_locations)[11] = new geo_pos(0,4);
-    (*geo_locations)[12] = new geo_pos(0,3);
-    (*geo_locations)[13] = new geo_pos(1,3);
-    (*geo_locations)[14] = new geo_pos(3,3);
-    (*geo_locations)[15] = new geo_pos(4,3);
-    (*geo_locations)[16] = new geo_pos(4,4);
-    (*geo_locations)[17] = new geo_pos(3,5);
-    (*geo_locations)[18] = new geo_pos(1,3);
-    (*geo_locations)[19] = new geo_pos(3,3);
+    rand_intervals = new std::map<int, int>();
+    ifstream in_file;
+    in_file.open(benchmark_name+".txt");
+    cout << "read geo locations...\n";
+    int s,x,y;
+    while(in_file >> s >> x >> y){
+        cout << s <<" : " << x <<" , "<< y << endl;
+        (*geo_locations)[s] = new geo_pos(x,y);
+        (*rand_intervals)[s] = get_random(0,MAX_INTERVAL_NUM-1);
+    }
+//    (*geo_locations)[0] = new geo_pos(0,5);
+//    (*geo_locations)[1] = new geo_pos(1,5);
+//    (*geo_locations)[2] = new geo_pos(2,5);
+//    (*geo_locations)[3] = new geo_pos(3,5);
+//    (*geo_locations)[4] = new geo_pos(4,5);
+//    (*geo_locations)[5] = new geo_pos(2,4);
+//    (*geo_locations)[6] = new geo_pos(2,3);
+//    (*geo_locations)[7] = new geo_pos(2,2);
+//    (*geo_locations)[8] = new geo_pos(2,1);
+//    (*geo_locations)[9] = new geo_pos(2,0);
+//    (*geo_locations)[10] = new geo_pos(3,1);
+//    (*geo_locations)[11] = new geo_pos(0,4);
+//    (*geo_locations)[12] = new geo_pos(0,3);
+//    (*geo_locations)[13] = new geo_pos(1,3);
+//    (*geo_locations)[14] = new geo_pos(3,3);
+//    (*geo_locations)[15] = new geo_pos(4,3);
+//    (*geo_locations)[16] = new geo_pos(4,4);
+//    (*geo_locations)[17] = new geo_pos(3,5);
+//    (*geo_locations)[18] = new geo_pos(1,3);
+//    (*geo_locations)[19] = new geo_pos(3,3);
     
+//    spot::parsed_aut_ptr bench_model = Util::readAutFromFile(benchmark_name+".hoa", false, shared_dict);
+//    if (!bench_model || bench_model->errors.size() > 0) {
+//        cout << "could not read the model from file!" <<benchmark_name+".hoa\n";
+//        exit(0);
+//    }    
+//    spot::kripke_graph_ptr bench_kripke = bench_model->ks;
+//    spot::twa_graph_ptr bench_twa = bench_model->aut;
+//    cout << "...\n";
+//    //dfs_twa(bench_twa);
+//    //cout << bench_kripke->format_state(bench_kripke->get_init_state()) << endl;
+//    
+//    if(true)
+//        exit(0);
+//    
 
+    dfs_twa(aut_model);
     model_4("");
 
     cout << "done!\n";
@@ -152,6 +179,7 @@ void dfs_twa_graph(spot::const_twa_graph_ptr aut, bdd query) {
 }
 
 void dfs_twa(spot::const_twa_ptr aut)
+//void dfs_twa(spot::twa* aut)
 {
   spot::state_unicity_table seen;
   std::stack<std::pair<const spot::state*,
@@ -179,17 +207,18 @@ void dfs_twa(spot::const_twa_ptr aut)
        const spot::state* dst = srcit->dst();
        std::cout << aut->format_state(src) << "->"
                  << aut->format_state(dst) << '\n';
+       //aut->cond(src) = q_bdd;
        // Advance the iterator, and maybe release it.
-
+       
        if (!srcit->next())
          {
-            spot::twa_succ_iterator* it = aut->succ_iter(src);
-            int c = 0;
-            if(it->first())
-                c++;
-            while(it->next())
-                c++;
-            cout << "num edges: " << c << endl;
+//            spot::twa_succ_iterator* it = aut->succ_iter(src);
+//            int c = 0;
+//            if(it->first())
+//                c++;
+//            while(it->next())
+//                c++;
+//            cout << "num edges: " << c << endl;
             aut->release_iter(srcit);
             todo.pop();
          }
@@ -333,7 +362,7 @@ void model_4(string formula) {
     }
 
     // Find a run of or marine_robot_kripke that intersects af.
-    auto k = std::make_shared<marine_robot_kripke>(shared_dict, str_certainty_ap, aut_model,
+    auto k = std::make_shared<car_robot_kripke>(shared_dict, str_certainty_ap, aut_model,
             init_state, lst_loc, shared_intervals);
    
   //dfs_twa(k);
@@ -368,9 +397,4 @@ void model_4(string formula) {
 
     // mvspot::mvtwaproduct mvtp;
     // mvtp.test_me_again();
-}
-
-void test()
-{
-    
 }

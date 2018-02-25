@@ -6,6 +6,9 @@
 
 #include "KripkeModel.h"
 
+//int get_random_interval(int low, int high) {
+//    return (int) (low + (float) rand() / RAND_MAX * (high - low));
+//}
 
 float* convert_formula_to_interval(const bdd &cond) {
     //cout <<"in: convert_formula_to_interval\n";
@@ -256,7 +259,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
 //----------------------------------------------//
 //  class marine_robot_state    
 //----------------------------------------------//
-    marine_robot_state::marine_robot_state(unsigned* state_num, //unsigned* from_state_num, 
+    car_robot_state::car_robot_state(unsigned* state_num, //unsigned* from_state_num, 
             spot::twa_graph_ptr org_model, mvspot::mv_interval* q_interval) 
     {
         q_interval_ = q_interval;
@@ -275,28 +278,28 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
     }
 
 
-    unsigned* marine_robot_state::get_state_num() const {
+    unsigned* car_robot_state::get_state_num() const {
         return state_num_;
     }
 
-    unsigned* marine_robot_state::get_from_state_num() const {
+    unsigned* car_robot_state::get_from_state_num() const {
         //return from_state_num_;
         return from_sate_map[this->hash()];
     }
 
 
-    mvspot::mv_interval* marine_robot_state::get_q_interval() const {
+    mvspot::mv_interval* car_robot_state::get_q_interval() const {
         return q_interval_;
     }
 
-    marine_robot_state* marine_robot_state::clone() const {
-        marine_robot_state* res = new marine_robot_state(state_num_, //from_state_num_, 
+    car_robot_state* car_robot_state::clone() const {
+        car_robot_state* res = new car_robot_state(state_num_, //from_state_num_, 
                 org_model_, q_interval_);
 
         return res;
     }
 
-    size_t marine_robot_state::hash() const {
+    size_t car_robot_state::hash() const {
         int hash = 23;
         if (NUM_CARS > 1)
             for (int i = 0; i <= NUM_CARS - 1; i++) {
@@ -310,8 +313,8 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         return hash;
     }
 
-    int marine_robot_state::compare(const spot::state* other) const {
-        auto o = static_cast<const marine_robot_state*> (other);
+    int car_robot_state::compare(const spot::state* other) const {
+        auto o = static_cast<const car_robot_state*> (other);
         size_t oh = o->hash();
         size_t h = hash();
         if (h < oh)
@@ -320,7 +323,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
             return h > oh;
     }
 
-    marine_robot_state::~marine_robot_state() {
+    car_robot_state::~car_robot_state() {
         delete [] state_num_;
         //delete [] from_state_num_;
     }
@@ -328,7 +331,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
 //  class marine_robot_succ_iterator    
 //----------------------------------------------//
 
-    marine_robot_succ_iterator::marine_robot_succ_iterator(unsigned* state_num, spot::twa_graph_ptr org_model, 
+    car_robot_succ_iterator::car_robot_succ_iterator(unsigned* state_num, spot::twa_graph_ptr org_model, 
             bdd cond, mvspot::mv_interval* intervals, size_t src_hash)
     : kripke_succ_iterator(cond), org_model_(org_model) {
         
@@ -343,12 +346,12 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         delete[] state_num;
     }
 
-    marine_robot_succ_iterator::~marine_robot_succ_iterator() {
+    car_robot_succ_iterator::~car_robot_succ_iterator() {
         delete [] state_num_;
         delete [] aut_succ_;
     }
 
-    bool marine_robot_succ_iterator::first() {
+    bool car_robot_succ_iterator::first() {
 
         bool res = true;//false
         for (int i = 0; i < NUM_CARS; i++) {
@@ -359,7 +362,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         return res;
     }
 
-    bool marine_robot_succ_iterator::next() {
+    bool car_robot_succ_iterator::next() {
         
         for (int i = 0; i < NUM_CARS; i++){
             if(aut_succ_[i]->next()){
@@ -370,7 +373,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         return false;
     }
 
-    bool marine_robot_succ_iterator::done() const {
+    bool car_robot_succ_iterator::done() const {
         
         //bool res = true;//true
         //for (int i = 0; i < NUM_CARS; i++)
@@ -379,7 +382,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         return aut_succ_[NUM_CARS-1]->done();
     }
 
-    marine_robot_state* marine_robot_succ_iterator::dst() const {
+    car_robot_state* car_robot_succ_iterator::dst() const {
         //std::cout << "in: marine_robot_succ_iterator::dst\n";
         unsigned* state_num;
         state_num = new unsigned[NUM_CARS];
@@ -392,7 +395,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
             state_num[i] = org_model_->state_number(dst);
             dst->destroy();
             //from_state_num[i] = state_num_[i];
-            if (aut_succ_[i]->cond() != bddfalse) {
+            if (aut_succ_[i]->cond() != bddfalse && aut_succ_[i]->cond() != bddtrue) {
                 spot::internal::twa_succ_iterable k = 
                     org_model_->succ(org_model_->state_from_number(state_num[i]));
                 bdd cnd = (*k.begin())->cond();
@@ -404,11 +407,20 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
                     itv = itv->meet_mv(itv, tmp_itv);
             } 
         }
-        
+        if(itv==nullptr){
+            int r = (*rand_intervals)[state_num[0]];//get_random_interval(0,intervals_->getMap_all_intervals()->size()-1);
+            cout << "r: " << r <<endl;
+            std::map<std::pair<float,float>,mvspot::mv_interval*>::iterator it = intervals_->getMap_all_intervals()->begin();
+            for(int i=0;i<r;i++)
+                it++;
+            itv = it->second;
+            cout << itv->get_as_str() << endl;
+            
+        }
         //std::cout << "form: <" << state_num_[0] << " " << state_num_[1] << 
         //        "> to: <" << state_num[0] << " " << state_num[1] << ">\n";
         //return new marine_robot_state(state_num, from_state_num, org_model_, itv);
-        marine_robot_state* dst_state = new marine_robot_state(state_num, org_model_, itv);
+        car_robot_state* dst_state = new car_robot_state(state_num, org_model_, itv);
         if(from_sate_map.find(dst_state->hash())==from_sate_map.end() ){
             from_sate_map[dst_state->hash()] = new unsigned[NUM_CARS];
         } 
@@ -418,7 +430,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         return dst_state;
     }
 
-    void marine_robot_succ_iterator::recycle(twa_succ_iterator* aut_succ[], spot::twa_graph_ptr org_model, 
+    void car_robot_succ_iterator::recycle(twa_succ_iterator* aut_succ[], spot::twa_graph_ptr org_model, 
                         bdd cond, unsigned* state_num, mvspot::mv_interval* intervals, size_t src_hash) {
         org_model_ = org_model;
         intervals_ = intervals;
@@ -439,7 +451,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
 //----------------------------------------------//
 
 
-    marine_robot_kripke::marine_robot_kripke(const spot::bdd_dict_ptr& d, const string certainty,
+    car_robot_kripke::car_robot_kripke(const spot::bdd_dict_ptr& d, const string certainty,
             const spot::twa_graph_ptr org_model, const unsigned init_state[],
             const list<string> lst_str_loc[], mvspot::mv_interval* intervals)
     : spot::kripke(d), str_certainty_(certainty), org_model_(org_model) {
@@ -466,7 +478,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         shared_dict = dict_;
     }
 
-    marine_robot_state* marine_robot_kripke::get_init_state() const {
+    car_robot_state* car_robot_kripke::get_init_state() const {
         unsigned* init_state = new unsigned[NUM_CARS];
         //unsigned* from_init_state = new unsigned[NUM_CARS];
         mvspot::mv_interval* itv = nullptr;
@@ -488,10 +500,17 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         }
         if(itv==nullptr){
             cout << "!!! States must have ONE interval for now. Fix this in future. -> marine_robot_kripke::get_init_state\n";
-            exit(0);
+            //exit(0);
+            cout << "adding a random interval...\n";
+            int r = (*rand_intervals)[init_state[0]];//get_random_interval(0,intervals_->getMap_all_intervals()->size()-1);
+            cout << "r: " << r << endl;
+            std::map<std::pair<float,float>,mvspot::mv_interval*>::iterator it = intervals_->getMap_all_intervals()->begin();
+            for(int i=0;i<r;i++)
+                it++;
+            itv = it->second;
         }
         //marine_robot_state* ns = new marine_robot_state(init_state, from_init_state, org_model_, itv);
-        marine_robot_state* ns = new marine_robot_state(init_state, org_model_, itv);
+        car_robot_state* ns = new car_robot_state(init_state, org_model_, itv);
         //std::cout << "state: " << format_state(ns) << endl;
         from_sate_map[ns->hash()] = new unsigned[NUM_CARS];
         return ns;
@@ -500,9 +519,9 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
     }
 
 
-    marine_robot_succ_iterator* marine_robot_kripke::succ_iter(const spot::state* s) const {
+    car_robot_succ_iterator* car_robot_kripke::succ_iter(const spot::state* s) const {
         //cout << "<befor static_cast<const marine_robot_state*>(s)\n\n\n";
-        auto ss = static_cast<const marine_robot_state*> (s);
+        auto ss = static_cast<const car_robot_state*> (s);
         // cout << ">after static_cast<const marine_robot_state*>(s)\n\n\n";
         unsigned* state_num;
         state_num = new unsigned[NUM_CARS];
@@ -520,20 +539,20 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
 //            it->recycle(ss->get_aut_succ(), org_model_, cond);
 //            return it;
 //        }
-        return new marine_robot_succ_iterator(state_num, org_model_, cond, intervals_, ss->hash());
+        return new car_robot_succ_iterator(state_num, org_model_, cond, intervals_, ss->hash());
     }
 
-    list<string>* marine_robot_kripke::get_lst_str_loc() const {
+    list<string>* car_robot_kripke::get_lst_str_loc() const {
         return lst_str_loc_;
     }
 
-    std::map<string, bdd>* marine_robot_kripke::get_map_str_bdd_loc() const {
+    std::map<string, bdd>* car_robot_kripke::get_map_str_bdd_loc() const {
         return map_str_bdd_loc_;
     }
 
-    bdd marine_robot_kripke::state_condition(const spot::state* s) const {
+    bdd car_robot_kripke::state_condition(const spot::state* s) const {
         //cout <<"in: state_condition\n";
-        auto ss = static_cast<const marine_robot_state*> (s);
+        auto ss = static_cast<const car_robot_state*> (s);
         bdd res = bddtrue;
         //if(ss->get_state_num()[0]==18 && ss->get_state_num()[1]==6)
         //    cout << "from: " << ss->get_from_state_num()[0] << 
@@ -602,9 +621,9 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         return res;// & (goal ? goal_ : !goal_) & (ss->is_certain() ? certainty_ : !certainty_);
     }
 
-    bdd marine_robot_kripke::state_condition_static(const spot::state* s) const {
+    bdd car_robot_kripke::state_condition_static(const spot::state* s) const {
         //cout <<"in: state_condition\n";
-        auto ss = static_cast<const marine_robot_state*> (s);
+        auto ss = static_cast<const car_robot_state*> (s);
         bdd res = bddtrue;
         //if(ss->get_state_num()[0]==18 && ss->get_state_num()[1]==6)
         //    cout << "from: " << ss->get_from_state_num()[0] << 
@@ -647,8 +666,8 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
     }
     
     
-    std::string marine_robot_kripke::format_state(const spot::state* s) const {
-        auto ss = static_cast<const marine_robot_state*> (s);
+    std::string car_robot_kripke::format_state(const spot::state* s) const {
+        auto ss = static_cast<const car_robot_state*> (s);
         std::ostringstream out;
         string str_state = "< ";
         for (int i = 0; i < NUM_CARS; i++) {

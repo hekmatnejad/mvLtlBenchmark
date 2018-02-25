@@ -531,8 +531,8 @@ namespace spot {
                 //if (!itv_res.first->isFalse()) {
 
                     const spot::state* dst_state = left_->dst();
-                    const marine_robot_state* mrs =
-                            static_cast<const marine_robot_state*> (dst_state);
+                    const car_robot_state* mrs =
+                            static_cast<const car_robot_state*> (dst_state);
 
                     tuple_edge te(shared_formula_graph->edge_storage(right_).src,
                             shared_formula_graph->edge_storage(right_).dst,

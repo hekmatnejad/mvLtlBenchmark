@@ -1,0 +1,171 @@
+HOA: v1
+States: 81
+Start: 0
+AP: 4 "odd_x" "goal" "odd_y" "c > 0.99"
+acc-name: all
+Acceptance: 0 t
+properties: state-labels explicit-labels state-acc complete
+--BODY--
+State: [t] 0
+1 2 0
+State: [t] 1
+3 4 0 1
+State: [t] 2
+4 5 0 2
+State: [t] 3
+6 7 1 3
+State: [t] 4
+7 8 2 1 4
+State: [t] 5
+8 9 2 5
+State: [t] 6
+10 11 3 6
+State: [t] 7
+11 12 4 3 7
+State: [t] 8
+12 13 5 4 8
+State: [t] 9
+13 14 5 9
+State: [t] 10
+15 16 6 10
+State: [t] 11
+16 17 7 6 11
+State: [t] 12
+17 18 8 7 12
+State: [t] 13
+18 19 9 8 13
+State: [t] 14
+19 20 9 14
+State: [t] 15
+21 22 10 15
+State: [t] 16
+22 23 11 10 16
+State: [t] 17
+23 24 12 11 17
+State: [t] 18
+24 25 13 12 18
+State: [t] 19
+25 26 14 13 19
+State: [t] 20
+26 27 14 20
+State: [t] 21
+28 29 15 21
+State: [t] 22
+29 30 16 15 22
+State: [t] 23
+30 31 17 16 23
+State: [t] 24
+31 32 18 17 24
+State: [t] 25
+32 33 19 18 25
+State: [t] 26
+33 34 20 19 26
+State: [t] 27
+34 35 20 27
+State: [t] 28
+36 37 21 28
+State: [t] 29
+37 38 22 21 29
+State: [t] 30
+38 39 23 22 30
+State: [t] 31
+39 40 24 23 31
+State: [t] 32
+40 41 25 24 32
+State: [t] 33
+41 42 26 25 33
+State: [t] 34
+42 43 27 26 34
+State: [t] 35
+43 44 27 35
+State: [t] 36
+45 28 36
+State: [t] 37
+45 46 29 28 37
+State: [t] 38
+46 47 30 29 38
+State: [t] 39
+47 48 31 30 39
+State: [t] 40
+48 49 32 31 40
+State: [t] 41
+49 50 33 32 41
+State: [t] 42
+50 51 34 33 42
+State: [t] 43
+51 52 35 34 43
+State: [t] 44
+52 35 44
+State: [t] 45
+53 37 36 45
+State: [t] 46
+53 54 38 37 46
+State: [t] 47
+54 55 39 38 47
+State: [t] 48
+55 56 40 39 48
+State: [t] 49
+56 57 41 40 49
+State: [t] 50
+57 58 42 41 50
+State: [t] 51
+58 59 43 42 51
+State: [t] 52
+59 44 43 52
+State: [t] 53
+60 46 45 53
+State: [t] 54
+60 61 47 46 54
+State: [t] 55
+61 62 48 47 55
+State: [t] 56
+62 63 49 48 56
+State: [t] 57
+63 64 50 49 57
+State: [t] 58
+64 65 51 50 58
+State: [t] 59
+65 52 51 59
+State: [t] 60
+66 54 53 60
+State: [t] 61
+66 67 55 54 61
+State: [t] 62
+67 68 56 55 62
+State: [t] 63
+68 69 57 56 63
+State: [t] 64
+69 70 58 57 64
+State: [t] 65
+70 59 58 65
+State: [t] 66
+71 61 60 66
+State: [t] 67
+71 72 62 61 67
+State: [t] 68
+72 73 63 62 68
+State: [t] 69
+73 74 64 63 69
+State: [t] 70
+74 65 64 70
+State: [t] 71
+75 67 66 71
+State: [t] 72
+75 76 68 67 72
+State: [t] 73
+76 77 69 68 73
+State: [t] 74
+77 70 69 74
+State: [t] 75
+78 72 71 75
+State: [t] 76
+78 79 73 72 76
+State: [t] 77
+79 74 73 77
+State: [t] 78
+80 76 75 78
+State: [t] 79
+80 77 76 79
+State: [t] 80
+79 78 80
+--END--
