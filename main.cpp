@@ -17,6 +17,7 @@
 #include "Util.h"
 #include "ModelGenerator.h"
 #include "KripkeModel.h"
+#include <random>
 
 //#include "mvtwaproduct.h"
 
@@ -48,6 +49,7 @@ void dfs_twa(spot::const_twa_ptr aut);
 //void dfs_twa(spot::twa* aut);
 spot::twa* my_twa;
 int get_random(int low, int high);
+int get_weighted_random();
 static spot::parsed_aut_ptr read_model_aut;
 static spot::kripke_graph_ptr kg_model;
 static spot::twa_graph_ptr aut_model;
@@ -55,10 +57,11 @@ static spot::twa_graph_ptr aut_model;
 std::map<int, geo_pos*>* geo_locations;  
 std::map<int, int>* rand_intervals;
 string benchmark_name = "benchmark/benchmark_model_";
-int MAX_GEO_X = 4;
-int MAX_GEO_Y = 4;
+int MAX_GEO_X = 16;
+int MAX_GEO_Y = 16;
 float MAX_GEO_DIST;
 int MAX_INTERVAL_NUM = 6;
+int NUM_INTERVALS = 2;
 void test();
 
 ///spot::twa_graph_ptr shared_formula_graph;
@@ -93,51 +96,21 @@ int main(int argc, char** argv) {
     rand_intervals = new std::map<int, int>();
     ifstream in_file;
     in_file.open(benchmark_name+".txt");
-    cout << "read geo locations...\n";
+    cout << "read geometric locations from "+benchmark_name+".txt\n";
     int s,x,y;
+    
+    //----------- Calculating the geometric locations and Random certainty generator
+  std::default_random_engine generator;
+  std::discrete_distribution<int> distribution {0,1,2,3,15,30};
     while(in_file >> s >> x >> y){
         cout << s <<" : " << x <<" , "<< y << endl;
         (*geo_locations)[s] = new geo_pos(x,y);
-        (*rand_intervals)[s] = get_random(0,MAX_INTERVAL_NUM-1);
+        //(*rand_intervals)[s] = get_random(MAX_INTERVAL_NUM-NUM_INTERVALS,MAX_INTERVAL_NUM);
+        (*rand_intervals)[s] = distribution(generator);
+        cout << "random index: " <<(*rand_intervals)[s] << endl;
     }
-//    (*geo_locations)[0] = new geo_pos(0,5);
-//    (*geo_locations)[1] = new geo_pos(1,5);
-//    (*geo_locations)[2] = new geo_pos(2,5);
-//    (*geo_locations)[3] = new geo_pos(3,5);
-//    (*geo_locations)[4] = new geo_pos(4,5);
-//    (*geo_locations)[5] = new geo_pos(2,4);
-//    (*geo_locations)[6] = new geo_pos(2,3);
-//    (*geo_locations)[7] = new geo_pos(2,2);
-//    (*geo_locations)[8] = new geo_pos(2,1);
-//    (*geo_locations)[9] = new geo_pos(2,0);
-//    (*geo_locations)[10] = new geo_pos(3,1);
-//    (*geo_locations)[11] = new geo_pos(0,4);
-//    (*geo_locations)[12] = new geo_pos(0,3);
-//    (*geo_locations)[13] = new geo_pos(1,3);
-//    (*geo_locations)[14] = new geo_pos(3,3);
-//    (*geo_locations)[15] = new geo_pos(4,3);
-//    (*geo_locations)[16] = new geo_pos(4,4);
-//    (*geo_locations)[17] = new geo_pos(3,5);
-//    (*geo_locations)[18] = new geo_pos(1,3);
-//    (*geo_locations)[19] = new geo_pos(3,3);
-    
-//    spot::parsed_aut_ptr bench_model = Util::readAutFromFile(benchmark_name+".hoa", false, shared_dict);
-//    if (!bench_model || bench_model->errors.size() > 0) {
-//        cout << "could not read the model from file!" <<benchmark_name+".hoa\n";
-//        exit(0);
-//    }    
-//    spot::kripke_graph_ptr bench_kripke = bench_model->ks;
-//    spot::twa_graph_ptr bench_twa = bench_model->aut;
-//    cout << "...\n";
-//    //dfs_twa(bench_twa);
-//    //cout << bench_kripke->format_state(bench_kripke->get_init_state()) << endl;
-//    
-//    if(true)
-//        exit(0);
-//    
 
-    dfs_twa(aut_model);
-    model_4("");
+  model_4("");
 
     cout << "done!\n";
     return 0;
@@ -239,27 +212,24 @@ void model_4(string formula) {
     unsigned* init_state;
     init_state = new unsigned[NUM_CARS];
     std::fill_n(init_state,NUM_CARS,0);
-    init_state[0] = 5;
+    //init_state[0] = 5;
+    init_state[0] = 10;
     if(NUM_CARS > 1)
-    init_state[1] = 6;
+    //init_state[1] = 6;
+    init_state[1] = 3;
+    init_state[2] = 7;
+    init_state[3] = 1;
     string** str_loc;
     str_loc = new string*[NUM_CARS];
     str_loc[0] = new string[2];
     str_loc[0][0] = "C1_loc_1";
     str_loc[0][1] = "C1_loc_9";
-//    str_loc[0][0] = "C1_loc_1";
-//    str_loc[0][1] = "C1_loc_2";
-    //str_loc[0][1] = "C1_loc_5";
-    //str_loc[0][1] = "C1_loc_6";
-    //str_loc[0][1] = "C1_loc_7";
     if(NUM_CARS > 1){
     str_loc[1] = new string[2];
     str_loc[1][0] = "C2_loc_4";
     str_loc[1][1] = "C2_loc_12";
-//    str_loc[1][0] = "C2_loc_1";
-//    str_loc[1][1] = "C2_loc_2";
 //    str_loc[2] = new string[1];
-//    str_loc[2][0] = "C3_loc_0";
+//    str_loc[2][0] = "C3_loc_5";
 //    str_loc[3] = new string[1];
 //    str_loc[3][0] = "C4_loc_0";
     }
@@ -271,19 +241,15 @@ void model_4(string formula) {
     lst_loc[1].push_back(str_loc[1][0]);
     lst_loc[1].push_back(str_loc[1][1]);
     }
-    for(int i=2; i<NUM_CARS; i++)
-        lst_loc[i].push_back("");
-//    for(int i=2; i<NUM_CARS; i++)
-//        lst_loc[i].push_back(str_loc[i][0]);
+
+    //for(int i=2; i<NUM_CARS; i++)
+    //    lst_loc[i].push_back(str_loc[i][0]);
     //****************//
     stringstream stream;
     stream << fixed << setprecision(2) << CERTAINTY_THREASHOLD;
     string str_threshold = stream.str();
     string str_certainty_ap = "q > " + str_threshold;
-    formula = "G(\"q=[0.5,1]\") & F(C1_loc_1) & F(C1_loc_9) & ((!C1_loc_1) U C1_loc_9) & "
-            "G(!C1_loc_1 | !C1_loc_9) & G(C1_loc_9 -> XG(\"q=[1,1]\"))";
-    formula += " & F(C2_loc_4) & F(C2_loc_12) & ((!C2_loc_12) U C2_loc_4) & "
-            "G(!C2_loc_4 | !C2_loc_12)";
+
 //---------------------------------------------------------------
 
     formula = "G(\"q=[0.5,1]\") & F(C1_loc_1) & F(C1_loc_9) & ((!C1_loc_1) U C1_loc_9) "
@@ -292,24 +258,11 @@ void model_4(string formula) {
             ////" & G(C1_loc_9 -> GF(\"q=[1,1]\"))";
     formula += " & F(C2_loc_4) & F(C2_loc_12) & ((!C2_loc_12) U C2_loc_4) "
             " & G(!C2_loc_4 | !C2_loc_12)"
-            " & G(C1_loc_4 -> XG(\"q=[1,1]\"))";
+            //" & G(C1_loc_4 -> XG(\"q=[1,1]\"))";
             "";
+            
+    //formula += " & FG(C3_loc_5 & C4_loc_0)";
 
-    //formula += " & FG C3_loc_0";// & FG C4_loc_0";
-    //formula = "G(\"q=[0.5,1]\") &  F(C2_loc_4) & F(C2_loc_12) & ((!C2_loc_12) U C2_loc_4) "
-    //        " & G(!C2_loc_4 | !C2_loc_12)"
-    //        "";
-
-    //formula = "F(C1_loc_1) & F(C1_loc_2) & ((!C1_loc_2) U C1_loc_1) "
-    //        " & G(!C1_loc_1 | !C1_loc_2) ";
-            //" & F(C2_loc_1) & F(C2_loc_2) & ((!C2_loc_2) U C2_loc_1) "
-            //" & G(!C2_loc_1 | !C2_loc_2) ";
-    
-    //init_state[0] = 0;
-    //init_state[1] = 0;
-
-    
-    //formula = "C1_loc_0 & X C1_loc_1 & XX C1_loc_2";
 
     if(COLLISION_AVOIDANCE)
         formula += " & G " + collision_symbol;
@@ -345,6 +298,10 @@ void model_4(string formula) {
     //dfs_twa_graph(af,bddtrue);
     
     
+//    mvspot::mv_interval* shared_intervals = mvspot::create_interval_set("certainty", "q", 2);
+//    shared_intervals->add_interval("q=[1,1]",1,1);
+//    shared_intervals->add_interval("q=[0.5,1]",0.5,1);
+
     mvspot::mv_interval* shared_intervals = mvspot::create_interval_set("certainty", "q", 5);
     shared_intervals->add_interval("q=[1,1]",1,1);
     shared_intervals->add_interval("q=[0.5,1]",0.5,1);

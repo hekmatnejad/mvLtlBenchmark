@@ -44,6 +44,7 @@ using namespace std;
 spot::twa_graph_ptr shared_formula_graph;
 const spot::kripke* shared_model_kripke;
 bool clear_todo_queue = false;
+bool RUN_IN_OPTIMAL_MODE = true;
 
 //namespace mv{
 
@@ -65,7 +66,7 @@ namespace spot {
 
     void
     state_product::destroy() const {
-        if(look_ahead_loc_)
+        if(RUN_IN_OPTIMAL_MODE && look_ahead_loc_)
             delete look_ahead_loc_;
         if (--count_)
             return;
@@ -250,202 +251,13 @@ namespace spot {
             virtual ~twa_succ_iterator_product_kripke() {
             }
 
-            float find_dist_to_locs_graph_cpy_1(unsigned* state_num, const tuple_edge& f_state) {
-                bool cycle_node = false;
-                if (f_state.dst_ == f_state.src_)
-                    cycle_node = true;
-                if (cycle_node)
-                    return NUM_CARS;
-
-                std::map<int, std::list<symbol_stc>*>* s_map = (*shared_locs).at(f_state);
-                float min_dist[NUM_CARS];
-                float res = 0;
-                bool found = false;
-                for (int i = 0; i < NUM_CARS; i++) {
-                    min_dist[i] = 1;
-                    float dist_neg = 1;
-                    float dist_pos = 1;
-                    found = false;
-                    std::list<symbol_stc>* s_list = (*s_map)[i + 1];
-                    //if(s_list->size()>1)
-                    //    std::cout << "\n\n**** No more than one location symbol per state must exist!\n\n";
-                    //if(s_list!=NULL)//not needed anymore
-                    //if (!s_list->empty())
-                    for (std::list<symbol_stc>::iterator it = s_list->begin(); it != s_list->end(); ++it) {
-                        //                  cout << (*it).loc << " type: ";
-                        //                  if((*it).type == symbol_type::NEGATIVE)
-                        //                      cout << "NEG\n";
-                        //                  else if((*it).type == symbol_type::POSITIVE)
-                        //                      cout << "POS\n";
-                        //                  else
-                        //                      cout << "BOT\n";
-
-                        //cout << (*geo_locations)[state_num[i]]->x_ << " , " << (*geo_locations)[state_num[i]]->y_ << endl;
-                        //cout << (*geo_locations)[(*it).loc]->x_ << " , " << (*geo_locations)[(*it).loc]->y_ << endl;
-                        //cout << "--------\n";
-                        /*
-                                        //if(cycle_node)
-                                        {
-                                        if( (*it).type == symbol_type::NEGATIVE)
-                                        {
-                                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_ , 2);
-                                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                                            dist = std::sqrt(dist);
-                                            dist = dist / MAX_GEO_DIST;
-                                            if (dist < dist_neg)
-                                            {
-                                                dist_neg = dist;
-                                                found = true;
-                                            }
-                                        }
-
-                                        }
-                                        //else
-                                        {
-                                        if ( (*it).type == symbol_type::POSITIVE) {
-                                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_, 2);
-                                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                                            dist = std::sqrt(dist);
-                                            dist = dist / MAX_GEO_DIST;
-                                            //if (dist < min_dist[i])
-                                            {
-                                                dist_pos = dist;
-                                                found = true;
-                                            }
-                                        }
-
-                                        }
-                         */
-
-                        //this must be updated: only one location symbol per state
-                        if ((*it).type == symbol_type::POSITIVE) {
-                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_, 2);
-                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                            dist = std::sqrt(dist);
-                            dist = dist / MAX_GEO_DIST;
-                            //if (dist < min_dist[i])
-                            {
-                                min_dist[i] = dist;
-                                found = true;
-                            }
-                        }
-                        /*
-                        else if( (*it).type == symbol_type::NEGATIVE)
-                        {
-                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_ , 2);
-                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                            dist = std::sqrt(dist);
-                            dist = dist / MAX_GEO_DIST;
-                            //if (dist < min_dist[i])
-                            {
-                                min_dist[i] = dist;
-                                found = true;
-                            }
-                        }
-
-                        else if((*it).type == symbol_type::BOTH)
-                        {
-                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_ , 2);
-                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                            dist = std::sqrt(dist);
-                            dist = dist / MAX_GEO_DIST;
-                            dist = dist < (1-dist) ? dist : 1-dist;
-                            //if(dist < min_dist[i])
-                            {
-                                min_dist[i] = dist;
-                                found = true;
-                            }
-                        }
-                         */
-                    }
-                    //        if(dist_pos < 1)
-                    //            min_dist[i] = dist_pos;
-                    //        else if(dist_neg < 1)
-                    //            min_dist[i] = dist_neg;
-                    //if (found)
-                    res += min_dist[i];
-                }
-
-                if (!found && res == 0)
-                    res = NUM_CARS * 1;
-                //cout << res<<endl;
-                return res;
-            }
-
-            float find_dist_to_locs_graph_cpy_2(unsigned* state_num, const tuple_edge& f_state) {
-
-                std::map<int, std::list<symbol_stc>*>* s_map = (*shared_locs).at(f_state);
-                float min_dist[NUM_CARS];
-                float res = 0;
-                bool found = false;
-                for (int i = 0; i < NUM_CARS; i++) {
-                    min_dist[i] = 1;
-                    float dist_neg = 1;
-                    float dist_pos = 1;
-                    found = false;
-                    std::list<symbol_stc>* s_list = (*s_map)[i + 1];
-                    for (std::list<symbol_stc>::iterator it = s_list->begin(); it != s_list->end(); ++it) {
-
-                        //this must be updated: only one location symbol per state
-                        if ((*it).type == symbol_type::POSITIVE) {
-                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_, 2);
-                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                            dist = std::sqrt(dist);
-                            dist = dist / MAX_GEO_DIST;
-                            if (dist < min_dist[i]) {
-                                min_dist[i] = dist;
-                                found = true;
-                            }
-                        }
-                        /*
-                        else if( (*it).type == symbol_type::NEGATIVE)
-                        {
-                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_ , 2);
-                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                            dist = std::sqrt(dist);
-                            dist = dist / MAX_GEO_DIST;
-                            if (dist < min_dist[i])
-                            {
-                                min_dist[i] = dist;
-                                found = true;
-                            }
-                        }*/
-                        /*
-                        else if((*it).type == symbol_type::BOTH)
-                        {
-                            float dist = std::pow((*geo_locations)[state_num[i]]->x_ - (*geo_locations)[(*it).loc]->x_ , 2);
-                            dist += std::pow((*geo_locations)[state_num[i]]->y_ - (*geo_locations)[(*it).loc]->y_, 2);
-                            dist = std::sqrt(dist);
-                            dist = dist / MAX_GEO_DIST;
-                            dist = dist < (1-dist) ? dist : 1-dist;
-                            //if(dist < min_dist[i])
-                            {
-                                min_dist[i] = dist;
-                                found = true;
-                            }
-                        }
-                         */
-                    }
-                    //        if(dist_pos < 1)
-                    //            min_dist[i] = dist_pos;
-                    //        else if(dist_neg < 1)
-                    //            min_dist[i] = dist_neg;
-                    //if (found)
-                    res += min_dist[i];
-                }
-
-                if (!found && res == 0)
-                    res = NUM_CARS * 1;
-                //cout << res<<endl;
-                return res;
-            }
-
             cost_loc_st find_dist_to_locs_graph(unsigned* state_num, const tuple_edge& f_state, std::map<int, std::vector<int>>* &look_ahead_loc) {
                 std::map<int, std::list<symbol_stc>*>* s_map = (*shared_locs).at(f_state);
-                //float min_dist[NUM_CARS];
                 cost_loc_st res;
                 res.cost_g = 0;
                 res.cost_h = 0;
+                float min_cost_g = MAX_GEO_DIST+1;
+                float min_cost_h = MAX_GEO_DIST+1;
                 bool found = false;
                 for (int i = 0; i < NUM_CARS; i++) {
                     //min_dist[i] = MAX_GEO_DIST;
@@ -453,6 +265,7 @@ namespace spot {
                     //std::list<symbol_stc>* s_list = (*s_map)[i + 1];
                     int f_loc = 0;
                     float dist = 0;
+                    float cost_h = 0;
                     //if((*look_ahead_loc)[i+1].empty()){
                     //cout << "\nEEEERRRROOORRR\n\n";
                     //}
@@ -466,11 +279,14 @@ namespace spot {
                         //if(dist==0)
                         //    dist =1;
                         res.cost_g += dist;
+                        if(min_cost_g>dist)
+                            min_cost_g = dist;
                     }
                     if ((*look_ahead_loc)[i + 1].size() > 1) {
                         float td = 0;
                         int current = (*(*look_ahead_loc)[i + 1].begin());
                         int next = 0;
+                        cost_h = 0;
                         for (std::vector<int>::iterator it = ++(*look_ahead_loc)[i + 1].begin(); it != (*look_ahead_loc)[i + 1].end(); ++it) {
                             //current = (*it);
                             //next = (*(++it));
@@ -480,10 +296,23 @@ namespace spot {
                             current = next;
                             td = std::sqrt(td);
                             res.cost_h += td;
+                            cost_h += td;
                         }
+                        if(min_cost_h>cost_h)
+                            min_cost_h = cost_h;
                     }
 
                 }
+                if(min_cost_g>MAX_GEO_DIST)
+                    min_cost_g = 0;
+                if(min_cost_h>MAX_GEO_DIST)
+                    min_cost_h = 0;
+                //update costs for the ones that had no look ahead targets
+                for(int i=0; i< NUM_CARS; i++)
+                    if((*look_ahead_loc)[i + 1].size()==0){
+                        res.cost_g += min_cost_g;
+                        res.cost_h += min_cost_h;
+                    }
                 return res;
             }
 
@@ -528,6 +357,16 @@ namespace spot {
                 
                 std::pair<mvspot::mv_interval*, bdd> itv_res;
                 itv_res = mvspot::interval_bdd::apply_and(right_->cond(), left_->cond(), shared_dict);
+                
+                if(!RUN_IN_OPTIMAL_MODE){
+                    current_cond_ = left_->cond() & right_->cond();
+                    //current_cond_ = bddtrue; //****************test: for printout purposes
+                    if(itv_res.first->isFalse())
+                        current_cond_ = bddfalse;
+                    else
+                        return true;
+                    return false;
+                }
                 //if (!itv_res.first->isFalse()) {
 
                     const spot::state* dst_state = left_->dst();
@@ -564,20 +403,6 @@ namespace spot {
                         //cout << endl;
 
                     }
-//                    if(mrs->get_state_num()[0]==9 && mrs->get_state_num()[1]==17 && 
-//                    mrs->get_from_state_num()[0] ==9 && mrs->get_from_state_num()[1]==4
-//                    )
-//                    {
-//                        cout << "cost: " << dst_cost_.cost_g << " " << dst_cost_.cost_h << endl;
-//                        for(std::vector<int>::iterator it = (*look_ahead_loc_tmp)[1].begin(); it != (*look_ahead_loc_tmp)[1].end(); ++it){
-//                            cout << (*it) << " "; 
-//                        }
-//                        cout << endl;
-//                        for(std::vector<int>::iterator it = (*look_ahead_loc_tmp)[2].begin(); it != (*look_ahead_loc_tmp)[2].end(); ++it){
-//                            cout << (*it) << " "; 
-//                        }
-//                        cout << endl;
-//                    }
                     
                     dst_cost_ = find_dist_to_locs_graph(mrs->get_state_num(), te, look_ahead_loc_tmp);
 
@@ -649,7 +474,9 @@ namespace spot {
 
             const state_product* dst() const override {
                 //cout << (*look_ahead_loc_tmp)[1].size() << " , " << (*look_ahead_loc_tmp)[2].size() << endl;
-                std::map<int, std::vector<int>>* look_ahead_loc = 
+                std::map<int, std::vector<int>>* look_ahead_loc;
+                if(RUN_IN_OPTIMAL_MODE)
+                    look_ahead_loc = 
                     new std::map<int, std::vector<int>>(*look_stack.top());
                 //delete look_stack.top();
                 //if(look_ahead_loc_tmp)
@@ -673,7 +500,7 @@ namespace spot {
                     delete look_stack.top();
                     look_stack.pop();
                 }
-                if(look_ahead_loc_)
+                if(RUN_IN_OPTIMAL_MODE && look_ahead_loc_)
                     delete look_ahead_loc_;
             }
             
@@ -802,7 +629,9 @@ namespace spot {
     const state*
     twa_product::get_init_state() const {
         std::map<int, std::vector<int>>*
-                look_ahead_loc = new std::map<int, std::vector<int>>(*look_ahead_loc_);
+                look_ahead_loc;
+        if(RUN_IN_OPTIMAL_MODE)
+            look_ahead_loc = new std::map<int, std::vector<int>>(*look_ahead_loc_);
         fixed_size_pool* p = const_cast<fixed_size_pool*> (&pool_);
         return new(p->allocate()) state_product(left_->get_init_state(),
                 right_->get_init_state(), look_ahead_loc, p);
@@ -824,7 +653,8 @@ namespace spot {
 
         fixed_size_pool* p = const_cast<fixed_size_pool*> (&pool_);
         if (left_kripke_){
-            std::map<int, std::vector<int>>*
+            std::map<int, std::vector<int>>* look_ahead_loc;
+            if(RUN_IN_OPTIMAL_MODE)
                     look_ahead_loc = new std::map<int, std::vector<int>>(*(s->look_ahead_loc_));
             
             return new twa_succ_iterator_product_kripke(li, ri, look_ahead_loc, this, p);
@@ -879,7 +709,8 @@ namespace spot {
     const state*
     twa_product_init::get_init_state() const {
         fixed_size_pool* p = const_cast<fixed_size_pool*> (&pool_);
-        std::map<int, std::vector<int>>*
+        std::map<int, std::vector<int>>* look_ahead_loc;
+        if(RUN_IN_OPTIMAL_MODE)
                 look_ahead_loc = new std::map<int, std::vector<int>>(*look_ahead_loc_);
         return new(p->allocate()) state_product(left_init_->clone(),
                 right_init_->clone(), look_ahead_loc, p);
@@ -1068,7 +899,7 @@ namespace spot {
             (*look_aheads)[2].push_back(4);
             (*look_aheads)[2].push_back(12);
             
-            //(*look_aheads)[3].push_back(0);
+            //(*look_aheads)[3].push_back(5);
             //(*look_aheads)[4].push_back(0);
             //<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             twa_prd_->look_ahead_loc_ = look_aheads;
@@ -1293,9 +1124,10 @@ namespace spot {
                 }
             }
             if (found_plan) {
-                std::cout << "\nFOUND AN OPTIMAL PLAN ****\n" << "reverse size: " << reverse.size()
+                std::cout << "\nFOUND AN OPTIMAL PLAN ****\n" 
+                        << "reverse_state size: " << reverse_state.size()
+                        << " reverse size: " << reverse.size()
                         << " todo_q size: " << todo_q->size()
-                        //<< " visited size: " << visited.size() 
                         << endl;
 
                 std::stack<const spot::state*> path = std::stack<const spot::state*> ();
@@ -1338,780 +1170,6 @@ namespace spot {
             return twa_prd_;
 
         }
-
-        spot::twa_ptr find_optimal_path_A_star_cycle() {
-
-            std::cout << "*** in: find_optimal_path_A_star_look_ahead\n";
-
-            std::priority_queue<a_star_look_ahead_node, std::vector<a_star_look_ahead_node>,
-                    a_star_look_ahead_costcomparison>*
-                    todo_q = new std::priority_queue<a_star_look_ahead_node,
-                    std::vector<a_star_look_ahead_node>, a_star_look_ahead_costcomparison>();
-            std::priority_queue<a_star_look_ahead_node, std::vector<a_star_look_ahead_node>,
-                    a_star_look_ahead_costcomparison>*
-                    todo_q_cpy;
-            //std::unordered_set<size_t>
-            //        visited = std::unordered_set<size_t>();
-            std::map<size_t, std::stack < size_t>>
-                    reverse = std::map<size_t, std::stack < size_t >> ();
-            state_cost_map_ = std::map<size_t, float>();
-            std::map<size_t, float>
-                    total_cost_map = std::map<size_t, float>();
-            std::map<size_t, const spot::state*>
-                    reverse_state = std::map<size_t, const spot::state*>();
-            size_t target;
-            size_t start;
-            std::map<int, std::vector<int>>*
-                    look_aheads = new std::map<int, std::vector<int>>();
-            //>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            (*look_aheads)[1].push_back(9);
-            (*look_aheads)[1].push_back(1);
-            (*look_aheads)[2].push_back(4);
-            (*look_aheads)[2].push_back(12);
-            
-            //(*look_aheads)[3].push_back(0);
-            //(*look_aheads)[4].push_back(0);
-            //<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-            twa_prd_->look_ahead_loc_ = look_aheads;
-            const spot::state * init_state = twa_prd_->get_init_state();
-            std::pair<const spot::state*, float> item =
-                    std::make_pair(init_state, 0);
-            std::cout << "init state: " <<
-                    twa_prd_->format_state(init_state) << endl << endl;
-
-            todo_q->push(a_star_look_ahead_node(init_state->hash(),
-                    init_state->hash(), 0, 0, 0));
-            start = item.first->hash();
-            state_cost_map_[start] = 0;
-            total_cost_map[start] = 0;
-            //visited.insert(item.first->hash());
-            reverse[item.first->hash()].push(item.first->hash());
-            reverse_state[item.first->hash()] = item.first;
-            bool found_plan = false;
-            const spot::state* cs; //current state
-            float min_c = 0;
-            float optimal_cost = -1;
-            int steps = 20;
-            while (!todo_q->empty()) {
-                if(!(steps--)){
-                    //for(std::set<size_t>::iterator it = visited.begin(); it!=visited.end(); ++it)
-                    //cout <<"\n==> " << twa_prd_->format_state(reverse_state[(*it)]) << " hash: " << (*it) <<endl;
-                //   exit(0);
-                }
-                //auto start = chrono::steady_clock::now();
-                a_star_look_ahead_node node(todo_q->top());
-                todo_q->pop();
-                //visited.insert(node.state_hash_);
-                //cout << "hash: " << node.state_hash_ << endl;
-                cs = reverse_state[node.state_hash_]; //do not need the state, hash is fine
-                min_c = total_cost_map[node.state_hash_]; //solid
-
-                twa_succ_iterator_product_kripke* tit =
-                        down_cast<twa_succ_iterator_product_kripke*>
-                        (twa_prd_->succ_iter(cs));
-                    
-                //cout <<"\n*> " << twa_prd_->format_state(cs) << endl;//" hash: " << node.state_hash_ <<endl;
-                //cout <<"--------------\n";
-
-                //tit->set_look_ahead_loc(node.look_ahead_loc_);
-                if (!tit->first()) {
-                    //cout << "!tit->first()\n";
-                    tit->release_memory();
-                    twa_prd_->release_iter(tit);
-                    continue;
-                }
-                
-                
-                if (tit->cond() == bddfalse)
-                    cout << "\n.\n";
-                
-                
-                while (!tit->done() && tit->cond() != bddfalse) {
-                    const spot::state_product* tit_dst = tit->dst();
-//                    cout <<"-> " << twa_prd_->format_state(tit_dst) << endl;
-                    //cout << "before "<<tit_dst->hash() <<"\n";
-                    //EXTRA CHECK
-                    twa_succ_iterator_product_kripke* next_tit =
-                            down_cast<twa_succ_iterator_product_kripke*>
-                            (twa_prd_->succ_iter(tit_dst));
-                    if (!next_tit->first() || next_tit->cond() == bddfalse) {
-                        twa_prd_->release_iter(next_tit);
-                        tit_dst->destroy();
-                        if(tit->next())
-                            continue;
-                        break;
-                    }
-                    //cout << "after  "<<tit_dst->hash() <<"\n";
-                    
-                    //##################################################
-
-                    if (!found_plan && twa_prd_->right_acc().accepting(tit->acc()) &&
-                            tit->cond() != bddfalse) {
-                        found_plan = true;
-                    cout <<"(1)-> " << twa_prd_->format_state(cs) << endl;
-                        
-                    }
-                    else if (found_plan && twa_prd_->right_acc().accepting(tit->acc()) &&
-                            tit->cond() != bddfalse) {
-                        cout << "cond: " << tit->acc() << endl;
-                        target = tit_dst->hash();
-                        if (target != cs->hash()) {
-                            reverse[target].push(cs->hash());
-                            reverse_state[target] = tit_dst;
-                        }
-                        optimal_cost = min_c+NUM_CARS + tit->cost_inf();
-                        state_cost_map_[tit_dst->hash()] = NUM_CARS + tit->cost_inf();
-
-                    cout <<"(2)-> " << twa_prd_->format_state(cs) << endl;
-                        
-                        found_plan = true;
-                        break;
-                    }
-                    //##################################################
-
-
-                    //float cost_g = tit->dst_cost().cost_g + (tit->cost_sup()+tit->cost_sup())/2.0;
-                    //float extra = tit->cost_inf();
-                    //if(tit->cost_inf() != tit->cost_sup);
-                    //float cost_g = NUM_CARS + (tit->cost_inf() + tit->cost_sup()) / 2.0;
-                    float cost_g = NUM_CARS + tit->cost_inf();
-                    float cost_f1 = NUM_CARS + min_c + tit->dst_cost().cost_g + tit->dst_cost().cost_h +  next_tit->cost_inf();
-                    float cost_f2 = NUM_CARS + min_c + tit->dst_cost().cost_g + tit->dst_cost().cost_h +  next_tit->cost_sup();
-                    //%%%%%%%% TEST ONLY
-                    //cost_f1 = min_c + NUM_CARS + tit->cost_inf();
-                    //cost_f2 = min_c + NUM_CARS + tit->cost_sup();
-                    
-                    //cout <<"-> " << twa_prd_->format_state(tit_dst) << " cost_f1: " << cost_f1 << " cost_g: " << cost_g << endl;
-                    //cout <<"-> " <<" cost_f1: " << (tit->dst_cost().cost_g + tit->dst_cost().cost_h) << " cost_g: " << cost_g << endl;
-                    
-                    //cout <<"-> " << twa_prd_->format_state(tit_dst) << " cost_g: "<< tit->dst_cost().cost_g <<  " cost_h: "<< tit->dst_cost().cost_h << endl;
-
-                    if (reverse_state.find(tit_dst->hash()) == reverse_state.end() )
-                    {
-                        //cout <<"**new: " << twa_prd_->format_state(tit_dst) << endl;
-                        todo_q->push(a_star_look_ahead_node(tit_dst->hash(), cs->hash(),
-                                cost_f1, cost_f2, 1));
-                        total_cost_map[tit_dst->hash()] = min_c + cost_g;
-                        state_cost_map_[tit_dst->hash()] = cost_g;
-                        reverse[tit_dst->hash()].push(cs->hash());
-                        if (reverse_state.find(tit_dst->hash()) == reverse_state.end())
-                            reverse_state[tit_dst->hash()] = tit_dst;
-                        //else
-                        //    tit_dst->destroy();
-                    } else if (reverse_state.find(tit_dst->hash()) != reverse_state.end()
-                            &&
-                            total_cost_map[tit_dst->hash()] > (min_c + cost_g)
-                            ) {
-                        //cout << "\n+\n";
-                        total_cost_map[tit_dst->hash()] = min_c + cost_g;
-                        state_cost_map_[tit_dst->hash()] = cost_g;
-                        reverse[tit_dst->hash()].push(cs->hash());
-                        //if(reverse_state.find(tit_dst->hash()) == reverse_state.end())
-                        //    reverse_state[tit_dst->hash()] = tit_dst;
-                        //else
-                        tit_dst->destroy();
-                    } else {
-                        //cout <<"\n!\n";
-                        //cout <<"rem: " << twa_prd_->format_state(tit_dst) << endl;
-                        tit_dst->destroy();
-                    }
-
-                    next_tit->release_memory();
-                    twa_prd_->release_iter(next_tit);
-
-                    if (!tit->next())
-                        break;
-                }
-
-
-                if (false && clear_todo_queue) {
-                    //cout << "\n^^^^" <<twa_prd_->format_state(reverse_state[tit_dst->hash()]) << endl;
-                    std::cout << "\nreverse size: " << reverse.size()
-                            << " todo_q size: " << todo_q->size()
-                            //<< " visited size: " << visited.size() 
-                            << endl << endl;
-                    cout << "cleaning priority queue... ";
-                    auto start = chrono::steady_clock::now();
-
-                    delete todo_q;
-                    todo_q = new std::priority_queue<a_star_look_ahead_node,
-                            std::vector<a_star_look_ahead_node>,
-                            a_star_look_ahead_costcomparison>();
-                    auto end = chrono::steady_clock::now();
-                    cout << "elapsed time in microseconds: " <<
-                            chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-                    clear_todo_queue = false;
-                    //if(visited.find(tit_dst->hash()) != visited.end())
-                    //    visited.erase(visited.find(tit_dst->hash()));
-                }
-
-                tit->release_memory();
-                    
-                twa_prd_->release_iter(tit);
-
-                if (found_plan)
-                    break;
-
-
-                //auto end = chrono::steady_clock::now();
-                //cout << "time ms: " << chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-                if (false && todo_q->size() > MAX_Q_SIZE_) {
-                    //const state_product* s = down_cast<const state_product*>(reverse_state[todo_q->top().state_hash_]);
-
-                    std::cout << "\nreverse size: " << reverse.size()
-                            << " todo_q size: " << todo_q->size()
-                            //<< " visited size: " << visited.size() 
-                            << endl << endl;
-                    cout << "Pruning priority queue... ";
-                    auto start = chrono::steady_clock::now();
-                    todo_q_cpy = new std::priority_queue<a_star_look_ahead_node,
-                            std::vector<a_star_look_ahead_node>,
-                            a_star_look_ahead_costcomparison>();
-                    for (int i = 0; i < NUM_CPY_FRM_Q_; i++) {
-                        todo_q_cpy->push(todo_q->top());
-                        todo_q->pop();
-                    }
-                    //todo: maybe visited map also must be updated!
-                    delete todo_q;
-                    todo_q = new std::priority_queue<a_star_look_ahead_node,
-                            std::vector<a_star_look_ahead_node>,
-                            a_star_look_ahead_costcomparison>();
-                    swap(todo_q, todo_q_cpy);
-                    delete todo_q_cpy;
-                    auto end = chrono::steady_clock::now();
-                    cout << "elapsed time in microseconds: " << chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-
-                }
-            }
-            if (found_plan) {
-                std::cout << "\nFOUND AN OPTIMAL PLAN ****\n" << "reverse size: " << reverse.size()
-                        << " todo_q size: " << todo_q->size()
-                        //<< " visited size: " << visited.size() 
-                        << endl;
-
-                std::stack<const spot::state*> path = std::stack<const spot::state*> ();
-                size_t st = target;
-                size_t tst;
-
-                //            for(int i=0; i<50;i++){
-                //                path.push(reverse_state[st]);
-                //                tst = reverse[st].top();
-                //                reverse[st].pop();
-                //                st = tst;
-                //                cout << twa_prd_->format_state(path.top()) << endl;//twa_prd_->format_state(st) << endl;
-                //            }
-                //            return;
-                while (st != start) {
-                    path.push(reverse_state[st]);
-                    tst = reverse[st].top();
-                    reverse[st].pop();
-                    st = tst;
-                }
-                path.push(reverse_state[st]);
-                float min_inf_cost = 0;
-                //cout << twa_prd_->format_state(reverse_state[st]) << endl;//twa_prd_->format_state(st) << endl;
-                while (!path.empty()) {
-                    cout << twa_prd_->format_state(path.top()) << endl; //twa_prd_->format_state(st) << endl;
-                    cout << state_cost_map_[path.top()->hash()] <<endl;
-                    min_inf_cost += state_cost_map_[path.top()->hash()];
-                    path.pop();
-                }
-                cout << "\noptimal path dist: " << optimal_cost << endl;
-                cout << "\noptimal path cost: " << min_inf_cost << endl;
-                //            for(int i=0; i<100; i++){
-                //                cout << todo_q.top().a_star_cost_ << endl;
-                //                todo_q.pop();
-                //            }
-            } else {
-                std::cout << "\nNOT FOUND PLAN ****\n";
-            }
-
-            return twa_prd_;
-
-        }
-        
-        
-        spot::twa_ptr find_optimal_path_A_star() {
-
-            std::cout << "*** in: find_optimal_path_A_star\n";
-
-            std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>*
-                    todo_q = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-            std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>*
-                    todo_q_cpy; // = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-            std::set<size_t> visited = std::set<size_t>();
-            std::map<size_t, std::stack < size_t>> reverse = std::map<size_t, std::stack < size_t >> ();
-            state_cost_map_ = std::map<size_t, float>();
-            std::map<size_t, float> total_cost_map = std::map<size_t, float>();
-            std::map<size_t, const spot::state*>
-                    reverse_state = std::map<size_t, const spot::state*>();
-            size_t target;
-            size_t start;
-            std::pair<const spot::state*, float> item =
-                    std::make_pair(twa_prd_->get_init_state(), 0);
-            std::cout << "init state: " << twa_prd_->format_state(twa_prd_->get_init_state()) << endl << endl;
-            todo_q->push(a_star_node(twa_prd_->get_init_state()->hash(), 0, 0));
-            start = item.first->hash();
-            state_cost_map_[start] = 0;
-            total_cost_map[start] = 0;
-            visited.insert(item.first->hash());
-            reverse[item.first->hash()].push(item.first->hash());
-            reverse_state[item.first->hash()] = item.first;
-            bool found_plan = false;
-            const spot::state* cs; //current state
-            float min_c = 0;
-            float optimal_cost = -1;
-            while (!todo_q->empty()) {
-                //auto start = chrono::steady_clock::now();
-
-                a_star_node node(todo_q->top());
-                todo_q->pop();
-                visited.insert(node.state_hash_);
-                cs = reverse_state[node.state_hash_]; //do not need the state, hash is fine
-                //min_c = node.primary_cost_;//not solid
-                min_c = total_cost_map[node.state_hash_]; //solid
-
-                twa_succ_iterator_product_kripke* tit =
-                        down_cast<twa_succ_iterator_product_kripke*>
-                        (twa_prd_->succ_iter(cs));
-                //spot::twa_succ_iterator* tit = twa_prd_->succ_iter(cs);
-                if (!tit->first()) {
-                    //cout << "!tit->first()\n";
-                    twa_prd_->release_iter(tit);
-                    continue;
-                }
-                if (tit->cond() == bddfalse)
-                    cout << ".";
-                while (!tit->done() && tit->cond() != bddfalse) {
-
-                    const spot::state_product* tit_dst = tit->dst();
-
-                    //                twa_succ_iterator_product_kripke* tmp =
-                    //                    down_cast<twa_succ_iterator_product_kripke*>
-                    //                    (twa_prd_->succ_iter(tit_dst));
-                    //                if(!tmp->first() || tmp->cond()==bddfalse){
-                    //                    tit->next();
-                    //                    twa_prd_->release_iter(tmp);
-                    //                    tit_dst->destroy();
-                    //                    continue;
-                    //                }
-
-                    //cout << tit->steps_ << " " << endl;
-
-
-                    //                if(twa_prd_->right_acc().accepting(tmp->acc()))
-                    //                {
-                    //                    cout << "cond: " << tmp->acc() << endl;
-                    //                    target = tmp->dst()->hash();
-                    //                    if(target != cs->hash()){
-                    //                        reverse[target] = cs->hash();
-                    //                        reverse_state[target] = tmp->dst();
-                    //                    }
-                    //                    optimal_cost = min_c;
-                    //                    found_plan = true;
-                    //                    break;
-                    //                }
-                    if (twa_prd_->right_acc().accepting(tit->acc()) &&
-                            tit->cond() != bddfalse) {
-                        cout << "cond: " << tit->acc() << endl;
-                        target = tit_dst->hash();
-                        if (target != cs->hash()) {
-                            reverse[target].push(cs->hash());
-                            reverse_state[target] = tit_dst;
-                        }
-                        optimal_cost = min_c;
-                        found_plan = true;
-                        break;
-                    }
-                    if (visited.find(tit_dst->hash()) == visited.end()
-                            //                        ||  (visited.find(tit_dst->hash()) != visited.end()
-                            //                            &&
-                            //                            ////total_cost_map[tit_dst->hash()] > (min_c+(tit->cost_inf()+tit->cost_sup())/2.0)
-                            //                            //total_cost_map[tit_dst->hash()] > (min_c+tit->cost_inf())
-                            //                            total_cost_map[tit_dst->hash()] > (min_c+(tit->inf()+tit->sup())/2.0)
-                            //                            )
-                            ) {
-                        //cout << ".";tit->steps_
-                        //cout << std::to_string(1-((tit->steps_)/25.0)) << "\n";
-                        todo_q->push(a_star_node(tit_dst->hash(),
-                                //min_c+(tit->inf()+tit->sup())/2.0 , min_c+ 1-((tit->steps_)/25.0) ));
-                                //min_c+(tit->inf()+tit->sup())/2.0 , min_c+tit->cost_inf() ));
-                                min_c + (tit->inf() + tit->sup()) / 2.0, 1));
-                        total_cost_map[tit_dst->hash()] = min_c + (tit->inf() + tit->sup()) / 2.0;
-                        state_cost_map_[tit_dst->hash()] = (tit->inf() + tit->sup()) / 2.0;
-                        reverse[tit_dst->hash()].push(cs->hash());
-                        if (reverse_state.find(tit_dst->hash()) == reverse_state.end())
-                            reverse_state[tit_dst->hash()] = tit_dst;
-                        //else
-                        //    tit_dst->destroy();
-                    } else if (visited.find(tit_dst->hash()) != visited.end()
-                            &&
-                            total_cost_map[tit_dst->hash()] > (min_c + (tit->inf() + tit->sup()) / 2.0)
-                            ) {
-                        //cout << "+";
-                        total_cost_map[tit_dst->hash()] = min_c + (tit->inf() + tit->sup()) / 2.0;
-                        state_cost_map_[tit_dst->hash()] = (tit->inf() + tit->sup()) / 2.0;
-                        reverse[tit_dst->hash()].push(cs->hash());
-                        //if(reverse_state.find(tit_dst->hash()) == reverse_state.end())
-                        //    reverse_state[tit_dst->hash()] = tit_dst;
-                        //else
-                        tit_dst->destroy();
-                    } else {
-                        //cout << "-";
-                        //total_cost_map[tit_dst->hash()] = min_c+(tit->inf()+tit->sup())/2.0;
-                        //total_cost_map[tit_dst->hash()] = min_c+(tit->inf()+tit->sup())/2.0;
-                        //state_cost_map_[tit_dst->hash()] = (tit->inf()+tit->sup())/2.0;
-                        //reverse[tit_dst->hash()].push(cs->hash());
-                        //if(reverse_state.find(tit_dst->hash()) == reverse_state.end())
-                        //    reverse_state[tit_dst->hash()] = tit_dst;
-                        //else
-                        tit_dst->destroy();
-                        //                    float cpy_total_cost = total_cost_map[tit_dst->hash()];
-                        //                    size_t cpy_dst = tit_dst->hash();
-                        //                    if( visited.find(cpy_dst) != visited.end())
-                        //                    {
-                        //                        reverse_ = std::map<size_t,std::stack<size_t>>(reverse);
-                        //
-                        //                        bool loop_detected = false;;
-                        //                        cycle_cost_ = cycle_check(cs->hash(), cpy_dst);
-                        //                        if(cycle_cost_ !=0 )
-                        //                            loop_detected = true;
-                        //
-                        //                        if(loop_detected){
-                        //
-                        //                        //cout << "^^^^" <<twa_prd_->format_state(reverse_state[tit_dst->hash()]) << endl;
-                        //                            //cout << "update cost: " <<  total_cost_map[tit_dst->hash()] << " to " << cycle_cost_ << endl;
-                        //                            //total_cost_map[tit_dst->hash()] = min_c+cycle_cost_;//+(tit->inf()+tit->sup())/2.0;
-                        //                        }
-                        //                    }
-
-                        //                    tit_dst->destroy();
-
-                    }
-                    //                else if(false && (visited.find(tit_dst->hash()) != visited.end()
-                    //                            &&
-                    //                            //total_cost_map[tit_dst->hash()] > (min_c+(tit->cost_inf()+tit->cost_sup())/2.0)
-                    //                            total_cost_map[tit_dst->hash()] > (min_c+tit->cost_inf())
-                    //                            )
-                    //                  )
-                    //                {
-                    //                //cout << "^^^^" <<twa_prd_->format_state(tit_dst) << endl;//twa_prd_->format_state(st) << endl;
-                    //                if(tit_dst->hash()==cs->hash() || tit_dst->hash()==start)
-                    //                    break;
-                    //                //cout << "here\n";
-                    //                    size_t rn = cs->hash();
-                    //                    bool loop_detected = false;
-                    //                    while(reverse[rn].top()!=start){
-                    //                        if(reverse[rn].top()==tit_dst->hash()){
-                    //                            loop_detected = true;
-                    //                            cout << ".\n";
-                    //                            break;
-                    //                        }
-                    //                        rn = reverse[rn].top();
-                    //                    }
-                    //                    //cout << "out\n";
-                    //
-                    //                    if(!loop_detected){
-                    //                    todo_q->push(a_star_node(tit_dst->hash(),
-                    //                        min_c+tit->cost_inf(), min_c+tit->cost_sup()));
-                    //            //total_cost_map[tit_dst->hash()] = min_c+(tit->cost_inf()+tit->cost_sup())/2.0;
-                    //            total_cost_map[tit_dst->hash()] = min_c+tit->cost_inf();
-                    //            reverse[tit_dst->hash()].push(cs->hash());
-                    //                    state_cost_map[tit_dst->hash()] = (tit->inf());
-                    //                    if(reverse_state.find(tit_dst->hash())==reverse_state.end())
-                    //                        reverse_state[tit_dst->hash()] = tit_dst;
-                    //                    else
-                    //                        tit_dst->destroy();
-                    //
-                    //
-                    //                    }
-                    //                }
-
-                    //twa_prd_->release_iter(tmp);
-
-                    if (!tit->next())
-                        break;
-                }
-
-                //cout << todo_q->size() << endl;
-
-                if (false && clear_todo_queue) {
-                    //cout << "\n^^^^" <<twa_prd_->format_state(reverse_state[tit_dst->hash()]) << endl;
-                    std::cout << "\nreverse size: " << reverse.size()
-                            << " todo_q size: " << todo_q->size()
-                            << " visited size: " << visited.size() << endl << endl;
-                    cout << "cleaning priority queue... ";
-                    auto start = chrono::steady_clock::now();
-
-                    delete todo_q;
-                    todo_q = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-                    auto end = chrono::steady_clock::now();
-                    cout << "elapsed time in microseconds: " << chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-                    clear_todo_queue = false;
-                    //if(visited.find(tit_dst->hash()) != visited.end())
-                    //    visited.erase(visited.find(tit_dst->hash()));
-                }
-
-                twa_prd_->release_iter(tit);
-
-                if (found_plan)
-                    break;
-
-
-                //auto end = chrono::steady_clock::now();
-                //cout << "time ms: " << chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-                if (todo_q->size() > MAX_Q_SIZE_) {
-                    //const state_product* s = down_cast<const state_product*>(reverse_state[todo_q->top().state_hash_]);
-
-                    std::cout << "\nreverse size: " << reverse.size()
-                            << " todo_q size: " << todo_q->size()
-                            << " visited size: " << visited.size() << endl << endl;
-                    cout << "Pruning priority queue... ";
-                    auto start = chrono::steady_clock::now();
-                    todo_q_cpy = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-                    for (int i = 0; i < NUM_CPY_FRM_Q_; i++) {
-                        todo_q_cpy->push(todo_q->top());
-                        todo_q->pop();
-                    }
-                    //todo: maybe visited map also must be updated!
-                    delete todo_q;
-                    todo_q = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-                    swap(todo_q, todo_q_cpy);
-                    delete todo_q_cpy;
-                    auto end = chrono::steady_clock::now();
-                    cout << "elapsed time in microseconds: " << chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-
-                }
-            }
-            if (found_plan) {
-                std::cout << "\nFOUND AN OPTIMAL PLAN ****\n" << "reverse size: " << reverse.size()
-                        << " todo_q size: " << todo_q->size()
-                        << " visited size: " << visited.size() << endl;
-
-                std::stack<const spot::state*> path = std::stack<const spot::state*> ();
-                size_t st = target;
-                size_t tst;
-
-                //            for(int i=0; i<50;i++){
-                //                path.push(reverse_state[st]);
-                //                tst = reverse[st].top();
-                //                reverse[st].pop();
-                //                st = tst;
-                //                cout << twa_prd_->format_state(path.top()) << endl;//twa_prd_->format_state(st) << endl;
-                //            }
-                //            return;
-                while (st != start) {
-                    path.push(reverse_state[st]);
-                    tst = reverse[st].top();
-                    reverse[st].pop();
-                    st = tst;
-                }
-                path.push(reverse_state[st]);
-                float min_inf_cost = 0;
-                //cout << twa_prd_->format_state(reverse_state[st]) << endl;//twa_prd_->format_state(st) << endl;
-                while (!path.empty()) {
-                    cout << twa_prd_->format_state(path.top()) << endl; //twa_prd_->format_state(st) << endl;
-                    min_inf_cost += state_cost_map_[path.top()->hash()];
-                    path.pop();
-                }
-                cout << "\noptimal path dist: " << optimal_cost << endl;
-                cout << "\noptimal path cost: " << min_inf_cost << endl;
-                //            for(int i=0; i<100; i++){
-                //                cout << todo_q.top().a_star_cost_ << endl;
-                //                todo_q.pop();
-                //            }
-            } else {
-                std::cout << "\nNOT FOUND PLAN ****\n";
-            }
-
-            return twa_prd_;
-
-        }
-
-        spot::twa_ptr find_optimal_path() {
-
-            std::cout << "*** in: find_optimal_path_A_star\n";
-
-            std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>*
-                    todo_q = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-            std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>*
-                    todo_q_cpy; // = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-            std::set<size_t> visited = std::set<size_t>();
-            std::map<size_t, size_t> reverse = std::map<size_t, size_t>();
-            std::map<size_t, float> state_cost_map = std::map<size_t, float>();
-            std::map<size_t, float> total_cost_map = std::map<size_t, float>();
-            std::map<size_t, const spot::state*>
-                    reverse_state = std::map<size_t, const spot::state*>();
-            size_t target;
-            size_t start;
-            std::pair<const spot::state*, float> item =
-                    std::make_pair(twa_prd_->get_init_state(), 0);
-            std::cout << "init state: " << twa_prd_->format_state(twa_prd_->get_init_state()) << endl;
-            todo_q->push(a_star_node(twa_prd_->get_init_state()->hash(), 0, 0));
-            start = item.first->hash();
-            state_cost_map[start] = 0;
-            total_cost_map[start] = 0;
-            visited.insert(item.first->hash());
-            reverse[item.first->hash()] = item.first->hash();
-            reverse_state[item.first->hash()] = item.first;
-            bool found_plan = false;
-            const spot::state* cs; //current state
-            float min_c = 0;
-            float optimal_cost = -1;
-            int steps = 100;
-            while (!todo_q->empty()) {
-                //auto start = chrono::steady_clock::now();
-
-                a_star_node node(todo_q->top());
-                todo_q->pop();
-                visited.insert(node.state_hash_);
-                cs = reverse_state[node.state_hash_]; //do not need the state, hash is fine
-                //min_c = node.primary_cost_;//not solid
-                min_c = total_cost_map[node.state_hash_]; //solid
-
-                twa_succ_iterator_product_kripke* tit =
-                        down_cast<twa_succ_iterator_product_kripke*>
-                        (twa_prd_->succ_iter(cs));
-                //spot::twa_succ_iterator* tit = twa_prd_->succ_iter(cs);
-                if (!tit->first()) {
-                    twa_prd_->release_iter(tit);
-                    continue;
-                }
-                while (!tit->done() && tit->cond() != bddfalse) {
-
-                    const spot::state_product* tit_dst = tit->dst();
-                    twa_succ_iterator_product_kripke* tmp =
-                            down_cast<twa_succ_iterator_product_kripke*>
-                            (twa_prd_->succ_iter(tit->dst()));
-                    if (!tmp->first()) {
-                        tit->next();
-                        twa_prd_->release_iter(tmp);
-                        continue;
-                    } else if (tmp->cond() == bddfalse) {
-                        tit->next();
-                        twa_prd_->release_iter(tmp);
-                        continue;
-                    }
-
-                    //                if(twa_prd_->right_acc().accepting(tmp->acc()))
-                    //                {
-                    //                    cout << "cond: " << tmp->acc() << endl;
-                    //                    target = tmp->dst()->hash();
-                    //                    if(target != cs->hash()){
-                    //                        reverse[target] = cs->hash();
-                    //                        reverse_state[target] = tmp->dst();
-                    //                    }
-                    //                    optimal_cost = min_c;
-                    //                    found_plan = true;
-                    //                    break;
-                    //                }
-                    if (twa_prd_->right_acc().accepting(tit->acc()) &&
-                            tit->cond() != bddfalse) {
-                        cout << "cond: " << tit->acc() << endl;
-                        target = tit->dst()->hash();
-                        if (target != cs->hash()) {
-                            reverse[target] = cs->hash();
-                            reverse_state[target] = tit->dst();
-                        }
-                        optimal_cost = min_c;
-                        found_plan = true;
-                        break;
-                    }
-                    if (visited.find(tit_dst->hash()) == visited.end()
-                            || (visited.find(tit_dst->hash()) != visited.end()
-                            &&
-                            total_cost_map[tit_dst->hash()] > (min_c + (tit->inf() + tit->sup()) / 2.0)
-                            //total_cost_map[tit_dst->hash()] > (min_c+tit->cost_inf())
-                            )
-                            ) {
-
-                        //NO HURISTIC
-                        todo_q->push(a_star_node(tit_dst->hash(),
-                                //min_c+tit->cost_inf(), min_c+tit->cost_sup()));
-                                //min_c+(tit->inf()+tit->sup())/2, (tit->cost_inf()+tit->cost_sup())/2));
-                                min_c + tit->cost_inf(), min_c + tit->cost_sup()));
-                        //min_c+tit->loc_dist(), tit->loc_dist()));
-                        total_cost_map[tit_dst->hash()] = min_c + (tit->inf() + tit->sup()) / 2.0;
-                        //total_cost_map[tit_dst->hash()] = min_c+tit->cost_inf();
-                        ////total_cost_map[tit_dst->hash()] = min_c+(tit->cost_inf()+tit->cost_sup())/2;
-                        reverse[tit_dst->hash()] = cs->hash();
-                        state_cost_map[tit_dst->hash()] = (tit->inf());
-                        if (reverse_state.find(tit_dst->hash()) == reverse_state.end())
-                            reverse_state[tit_dst->hash()] = tit_dst;
-                        else
-                            tit_dst->destroy();
-                        //state_cost_map[tit->dst()->hash()] = (tit->inf() + tit->sup())/2;
-
-                    }
-
-                    twa_prd_->release_iter(tmp);
-
-                    if (!tit->next())
-                        break;
-                }
-                twa_prd_->release_iter(tit);
-
-                if (found_plan)
-                    break;
-
-                //auto end = chrono::steady_clock::now();
-                //cout << "time ms: " << chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-                if (todo_q->size() > MAX_Q_SIZE_) {
-                    //const state_product* s = down_cast<const state_product*>(reverse_state[todo_q->top().state_hash_]);
-
-                    std::cout << "\nreverse size: " << reverse.size()
-                            << " todo_q size: " << todo_q->size()
-                            << " visited size: " << visited.size() << endl << endl;
-                    cout << "cleaning priority queue... ";
-                    auto start = chrono::steady_clock::now();
-                    todo_q_cpy = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-                    for (int i = 0; i < NUM_CPY_FRM_Q_; i++) {
-                        todo_q_cpy->push(todo_q->top());
-                        todo_q->pop();
-                    }
-                    //todo: maybe visited map also must be updated!
-                    delete todo_q;
-                    todo_q = new std::priority_queue<a_star_node, std::vector<a_star_node>, a_star_costcomparison>();
-                    swap(todo_q, todo_q_cpy);
-                    delete todo_q_cpy;
-                    auto end = chrono::steady_clock::now();
-                    cout << "elapsed time in microseconds: " << chrono::duration_cast<chrono::microseconds>(end - start).count() << endl;
-
-                }
-            }
-            if (found_plan) {
-                std::cout << "\nFOUND AN OPTIMAL PLAN ****\n" << "reverse size: " << reverse.size()
-                        << " todo_q size: " << todo_q->size()
-                        << " visited size: " << visited.size() << endl;
-
-                std::stack<const spot::state*> path = std::stack<const spot::state*> ();
-
-                size_t st = target;
-                while (st != start) {
-                    path.push(reverse_state[st]);
-                    st = reverse[st];
-                }
-                path.push(reverse_state[st]);
-                float min_inf_cost = 0;
-                //cout << twa_prd_->format_state(reverse_state[st]) << endl;//twa_prd_->format_state(st) << endl;
-                while (!path.empty()) {
-                    cout << twa_prd_->format_state(path.top()) << endl; //twa_prd_->format_state(st) << endl;
-                    min_inf_cost += state_cost_map[path.top()->hash()];
-                    path.pop();
-                }
-                cout << "\noptimal path dist: " << optimal_cost << endl;
-                cout << "\noptimal path cost: " << min_inf_cost << endl;
-                //            for(int i=0; i<100; i++){
-                //                cout << todo_q.top().a_star_cost_ << endl;
-                //                todo_q.pop();
-                //            }
-            } else {
-                std::cout << "\nNOT FOUND PLAN ****\n";
-            }
-            return twa_prd_;
-        }
-
-
 
     private:
         spot::twa_product_ptr twa_prd_;
@@ -2151,7 +1209,8 @@ namespace spot {
         else
             a = remove_fin_maybe(a);
         //-----------------------------------
-        if (true) {
+        if (RUN_IN_OPTIMAL_MODE) {
+            cout << "RUN_IN_OPTIMAL_MODE is active\n";
             auto start = chrono::steady_clock::now();
             minimal_cost minc(mv::spot::otf_product(a, other));
             //minc.find_optimal_path();

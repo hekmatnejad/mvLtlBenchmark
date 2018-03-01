@@ -4,11 +4,16 @@
  * and open the template in the editor.
  */
 
+#include <valarray>
+
 #include "KripkeModel.h"
 
 //int get_random_interval(int low, int high) {
 //    return (int) (low + (float) rand() / RAND_MAX * (high - low));
 //}
+
+int num_digit = std::log10((MAX_GEO_X+1)*(MAX_GEO_Y+1))+1;
+
 
 float* convert_formula_to_interval(const bdd &cond) {
     //cout <<"in: convert_formula_to_interval\n";
@@ -301,17 +306,21 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
 
     size_t car_robot_state::hash() const {
         int hash = 23;
-        if (NUM_CARS > 1)
-            for (int i = 0; i <= NUM_CARS - 1; i++) {
-                hash = hash * 31 + state_num_[i];
-                //hash = hash * 31 + from_state_num_[i];
-            } else {
-            hash = hash * 31 + state_num_[0];
-            //hash = hash * 31 + from_state_num_[0];
-        }
-
+        for (int i = 0; i <= NUM_CARS - 1; i++) 
+            hash = hash * 31 + state_num_[i];
         return hash;
-    }
+    }    
+    
+//    size_t car_robot_state::hash() const {
+//        stringstream stream;
+//        for (int i = 0; i <= NUM_CARS - 1; i++) {
+//            stream << setfill('0') << setw(num_digit) << state_num_[i];        
+//        } 
+//        //cout << stream.str() << " : " << std::stoul(stream.str()) <<endl;
+//        //return std::stoul(stream.str());
+//        //cout << stream.str() << " : " << std::hash<std::string>{}(stream.str()) <<endl;
+//        return std::hash<std::string>{}(stream.str());
+//    }
 
     int car_robot_state::compare(const spot::state* other) const {
         auto o = static_cast<const car_robot_state*> (other);
@@ -408,13 +417,14 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
             } 
         }
         if(itv==nullptr){
+            //cout << ">>>> " <<state_num[0]<<endl;
             int r = (*rand_intervals)[state_num[0]];//get_random_interval(0,intervals_->getMap_all_intervals()->size()-1);
-            cout << "r: " << r <<endl;
+            //cout << "r: " << r <<endl;
             std::map<std::pair<float,float>,mvspot::mv_interval*>::iterator it = intervals_->getMap_all_intervals()->begin();
             for(int i=0;i<r;i++)
                 it++;
             itv = it->second;
-            cout << itv->get_as_str() << endl;
+            //cout << itv->get_as_str() << endl;
             
         }
         //std::cout << "form: <" << state_num_[0] << " " << state_num_[1] << 
@@ -489,7 +499,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
                     org_model_->succ(org_model_->state_from_number(init_state_[i]));
         //cout << bdd_to_formula((*k.begin())->cond(),shared_dict) <<endl;
 
-            if ((*k.begin())->cond() != bddfalse) {
+            if ((*k.begin())->cond() != bddfalse && (*k.begin())->cond() != bddtrue) {
                 mvspot::mv_interval* tmp_itv = 
                         convert_formula_to_interval((*k.begin())->cond(), intervals_);
                 if(tmp_itv!=nullptr && itv==nullptr)
@@ -499,7 +509,7 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
             }
         }
         if(itv==nullptr){
-            cout << "!!! States must have ONE interval for now. Fix this in future. -> marine_robot_kripke::get_init_state\n";
+            //cout << "!!! States must have ONE interval for now. Fix this in future. -> marine_robot_kripke::get_init_state\n";
             //exit(0);
             cout << "adding a random interval...\n";
             int r = (*rand_intervals)[init_state[0]];//get_random_interval(0,intervals_->getMap_all_intervals()->size()-1);
@@ -671,7 +681,9 @@ std::map<size_t,unsigned*> from_sate_map = std::map<size_t,unsigned*>();
         std::ostringstream out;
         string str_state = "< ";
         for (int i = 0; i < NUM_CARS; i++) {
-            str_state += std::to_string(ss->get_state_num()[i]);
+            str_state += "loc_"+std::to_string(ss->get_state_num()[i])+"=("+
+                    std::to_string((*geo_locations)[ss->get_state_num()[i]]->x_) +","+
+                    std::to_string((*geo_locations)[ss->get_state_num()[i]]->y_)+")";
             if ((i + 1) < NUM_CARS)
                 str_state += "  ,  ";
         }

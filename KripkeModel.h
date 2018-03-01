@@ -20,12 +20,14 @@
 using namespace spot;
 
 const int NUM_CARS = 2;
-const bool COLLISION_AVOIDANCE = true;
+const bool COLLISION_AVOIDANCE = false;
 const std::string collision_symbol = "col_avo";
 static spot::bdd_dict_ptr shared_dict = spot::make_bdd_dict();
 static mvspot::mv_interval* shared_intervals = new mvspot::mv_interval("q");
 extern spot::twa_graph_ptr shared_formula_graph;
 extern std::map<int, int>* rand_intervals;
+class geo_pos;
+extern std::map<int, geo_pos*>* geo_locations;  
 
 class geo_pos{
 public:

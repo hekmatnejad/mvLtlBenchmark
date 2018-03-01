@@ -46,6 +46,7 @@
 #include <queue>
 #include <spot/twa/formula2bdd.hh>
 #include <chrono>
+#include <iomanip>
 
 using namespace std;
 //using namespace spot;
